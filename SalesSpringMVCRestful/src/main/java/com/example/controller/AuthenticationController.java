@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +12,14 @@ import java.sql.*;
 @RequestMapping("/authenticate")
 public class AuthenticationController {
 
-    private final String DB_URL = "jdbc:mysql://localhost:3306/shop_management";
-    private final String DB_USERNAME = "root";
-    private final String DB_PASSWORD = "123456";
+    @Value("${db.url}")
+    private String dbUrl;
+
+    @Value("${db.username}")
+    private String dbUsername;
+
+    @Value("${db.password}")
+    private String dbPassword;
 
     @PostMapping
     public ResponseEntity<String> authenticatePost(@RequestBody AuthenticationRequest authenticationRequest) {
@@ -49,7 +55,7 @@ public class AuthenticationController {
     }
 
     private boolean authenticateUser(String username, String password) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+    	try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")) {
             statement.setString(1, username);
             statement.setString(2, password);

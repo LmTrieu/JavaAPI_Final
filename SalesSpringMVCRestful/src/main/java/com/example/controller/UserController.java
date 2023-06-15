@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.model.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,13 +12,18 @@ import java.util.*;
 @RequestMapping("/users")
 public class UserController {
 
-    private final String DB_URL = "jdbc:mysql://localhost:3306/shop_management";
-    private final String DB_USERNAME = "root";
-    private final String DB_PASSWORD = "123456";
+    @Value("${db.url}")
+    private String dbUrl;
+
+    @Value("${db.username}")
+    private String dbUsername;
+
+    @Value("${db.password}")
+    private String dbPassword;
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<Map<Integer, User>> getUsers() {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("SELECT * FROM users")) {
 
@@ -39,12 +45,12 @@ public class UserController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<User> getUser(@PathVariable("id") int id) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
             statement.setInt(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                	String username = resultSet.getString("username");
+                    String username = resultSet.getString("username");
                     String password = resultSet.getString("password");
                     User user = new User(id, username, password);
                     return ResponseEntity.ok(user);
@@ -60,7 +66,7 @@ public class UserController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public ResponseEntity<String> updateUser(@PathVariable("id") int id, @RequestBody User updatedUser) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              PreparedStatement statement = connection.prepareStatement("UPDATE users SET username = ?, password = ? WHERE id = ?")) {
             statement.setString(1, updatedUser.getUsername());
             statement.setString(2, updatedUser.getPassword());
@@ -79,7 +85,7 @@ public class UserController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteUser(@PathVariable("id") int id) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              PreparedStatement statement = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
             statement.setInt(1, id);
             int rowsAffected = statement.executeUpdate();
@@ -96,7 +102,7 @@ public class UserController {
 
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<String> addUser(@RequestBody User newUser) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
              PreparedStatement statement = connection.prepareStatement("INSERT INTO users (id, username, password) VALUES (?, ?, ?)")) {
             statement.setInt(1, newUser.getId());
             statement.setString(2, newUser.getUsername());

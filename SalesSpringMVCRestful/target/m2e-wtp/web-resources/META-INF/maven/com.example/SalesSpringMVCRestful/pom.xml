@@ -6,7 +6,7 @@
   <packaging>war</packaging>
   
   <dependencies>
-	  		<dependency>
+		<dependency>
 	        <groupId>org.springframework</groupId>
 	        <artifactId>spring-jdbc</artifactId>
 	        <version>5.3.9</version> <!-- Thay phiên bản phù hợp -->
