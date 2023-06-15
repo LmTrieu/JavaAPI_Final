@@ -1,8 +1,5 @@
 package com.example.model;
 
-import java.util.Date;
-import java.util.Calendar;
-
 public class Cart {
 	private String customerID = "";
 	private String itemname = "";
@@ -22,7 +19,7 @@ public class Cart {
 
 
 	public Cart() {
-		// TODO Auto-generated constructor stub
+		super();
 	}
 
 	/**

@@ -7,6 +7,10 @@ public class Customer {
 	private int tel;
 	Cart cart = null;
 	
+	public Customer() {
+		super();
+	}
+	
 	public Customer(int customerId, String name, int tel) {
 		this.customerId = customerId;
 		this.name = name;
