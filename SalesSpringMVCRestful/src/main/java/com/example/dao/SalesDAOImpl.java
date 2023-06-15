@@ -49,54 +49,14 @@ public class SalesDAOImpl implements SalesDAO {
 	}
 
 
-	@Override
-	public void sortCustomerList(DefaultTableModel tableModel, AtomicBoolean isSorted) {
-	    JTable table = SalesFrame.getTable();
-	    @SuppressWarnings("unchecked")
-	    TableRowSorter<TableModel> sorter = (TableRowSorter<TableModel>) table.getRowSorter();
-
-	    if (sorter == null) {
-	        sorter = new TableRowSorter<>(tableModel);
-	        table.setRowSorter(sorter);
-	    }
-
-	    List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-	    sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING)); // Sắp xếp theo cột tên (cột 0) theo thứ tự tăng dần
-
-	    if (isSorted.get()) {
-	        sortKeys.set(0, new RowSorter.SortKey(0, SortOrder.DESCENDING)); // Nếu đã sắp xếp rồi, đảo ngược thứ tự sắp xếp
-	    }
-
-	    sorter.setSortKeys(sortKeys);
-	    sorter.sort();
-
-	    // Kiểm tra xem danh sách khách hàng ban đầu đã được lưu trước đó
-	    if (customerlist != null) {
-	        // Khôi phục lại danh sách khách hàng ban đầu
-	        tableModel.setRowCount(0);
-	        for (Customer customer : customerlist) {
-	            Object[] rowData = { customer.getName(), customer.getTel() };
-	            tableModel.addRow(rowData);
-	        }
-	    }
-
-	    // Lưu danh sách khách hàng ban đầu sau khi sắp xếp
-	    customerlist = new ArrayList<>();
-	    for (int i = 0; i < tableModel.getRowCount(); i++) {
-	        String name = (String) tableModel.getValueAt(i, 0);
-	        int tel = (int) tableModel.getValueAt(i, 1);
-	        Customer customer = new Customer(name, tel);
-	        customerlist.add(customer);
-	    }
-	}
+	
 
 
-
-	@Override
-	public List<Customer> getAllCustomers() {
-	    List<Customer> customerList = new ArrayList<>(customerlist);
-	    return customerList;
-	}
+//	@Override
+//	public List<Customer> getAllCustomers() {
+//	    List<Customer> customerList = new ArrayList<>(customerlist);
+//	    return customerList;
+//	}
 
 	public static List<Customer> updateCartDAO() {
 		try(Connection connection = DatabaseConnector.getConnection()) {
@@ -202,6 +162,26 @@ public class SalesDAOImpl implements SalesDAO {
         } catch (SQLException e) {
             throw new DatabaseActionException(e);
         }
+	}
+
+
+
+
+
+	@Override
+	public void sortCustomerList(DefaultTableModel tableModel, AtomicBoolean isSorted) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+
+
+	@Override
+	public List<Customer> getAllCustomers() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
