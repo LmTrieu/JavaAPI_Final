@@ -90,11 +90,12 @@ public class SaleController {
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public ResponseEntity<String> updateCustomer(@PathVariable("id") int id, @RequestBody Customer customerupt) {
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement statement = connection.prepareStatement("UPDATE customer SET name = '?', tel = ? WHERE customerid = ?")) {
+             PreparedStatement statement = connection.prepareStatement("UPDATE customer SET name = ?, tel = ? WHERE customerid = ?")) {
         	System.out.println(customerupt.getName() + customerupt.getTel());
             statement.setString(1, customerupt.getName());
             statement.setInt(2, customerupt.getTel());
             statement.setInt(3, id);
+            
             int rowsAffected = statement.executeUpdate();
             if (rowsAffected > 0) {
                 return ResponseEntity.ok("Customer updated successfully.");
