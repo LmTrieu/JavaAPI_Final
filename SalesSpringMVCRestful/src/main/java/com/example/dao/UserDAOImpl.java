@@ -6,25 +6,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.springframework.beans.factory.annotation.Value;
 
 import com.example.model.User;
 
 public class UserDAOImpl implements UserDAO {
 	
-    @Value("${db.url}")
-    private String dbUrl;
-
-    @Value("${db.username}")
-    private String dbUsername;
-
-    @Value("${db.password}")
-    private String dbPassword;
+    private final String DB_URL = "jdbc:mysql://localhost:3306/shop_management";
+    private final String DB_USERNAME = "root";
+    private final String DB_PASSWORD = "123456";
 	
 	@Override
 	public User getPasswordByUsername(String username) {
 	    String query = "SELECT password FROM users WHERE username = ?";
-	    try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+	    try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
 	         PreparedStatement statement = connection.prepareStatement(query)) {
 	        statement.setString(1, username);
 	        
@@ -44,7 +38,7 @@ public class UserDAOImpl implements UserDAO {
 
 	public boolean updateUser(User user) {
         String query = "UPDATE users SET password = ? WHERE username = ?";
-        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, user.getPassword());
             statement.setString(2, user.getUsername());

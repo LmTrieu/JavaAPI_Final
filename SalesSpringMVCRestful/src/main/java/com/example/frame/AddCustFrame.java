@@ -34,7 +34,7 @@ public class AddCustFrame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public AddCustFrame(JTable table) {
+	public AddCustFrame(final JTable table) {
 		setForeground(new Color(128, 128, 128));
 		setType(Type.UTILITY);
 		setResizable(false);

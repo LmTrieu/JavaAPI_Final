@@ -162,7 +162,7 @@ public class SalesFrame extends JFrame {
 		panel.add(btnNewCust);
 
 		// Tạo nút "Sort customer"
-		AtomicBoolean isSorted = new AtomicBoolean(false); // Khởi tạo AtomicBoolean với giá trị ban đầu là false
+		final AtomicBoolean isSorted = new AtomicBoolean(false); // Khởi tạo AtomicBoolean với giá trị ban đầu là false
 		JButton btnSort = new JButton("Sort customer");
 		btnSort.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		panel.add(btnSort);
@@ -346,13 +346,13 @@ public class SalesFrame extends JFrame {
 
 	        	int[]tdate = date(row);
 	        	try {
-	        		CbxSeller.setSelectedItem(temp.getSeller());
-		    		txtfItemName.setText(temp.getItemname());
-		    		datePicker.getModel().setDate(tdate[0],tdate[1]-1,tdate[2]);
-		    		datePicker.getModel().setSelected(true);
-		    		txtfFee.setText(Integer.toString(temp.getFee()));
-//		    		txtfQuant.setText(Integer.toString(temp.getQuantity()));
-		    		CbxQuant.setSelectedItem(Integer.toString(temp.getQuantity()));
+//	        		CbxSeller.setSelectedItem(temp.getSeller());
+//		    		txtfItemName.setText(temp.getItemname());
+//		    		datePicker.getModel().setDate(tdate[0],tdate[1]-1,tdate[2]);
+//		    		datePicker.getModel().setSelected(true);
+//		    		txtfFee.setText(Integer.toString(temp.getFee()));
+////		    		txtfQuant.setText(Integer.toString(temp.getQuantity()));
+//		    		CbxQuant.setSelectedItem(Integer.toString(temp.getQuantity()));
 				} catch (Exception e2) {
 
 				}
@@ -364,14 +364,14 @@ public class SalesFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					Cart temp = customer.get(table.getSelectedRow()).getCart();
-					temp.setItemname(txtfItemName.getText());
-					temp.setSalesdate(datePicker.getJFormattedTextField().getText());
-//					temp.setSeller(txtfSalesPerson.getText());
-					temp.setSeller(CbxSeller.getSelectedItem().toString());
-					temp.setFee(Integer.parseInt(txtfFee.getText()));
-//					temp.setQuantity(Integer.parseInt(txtfQuant.getText()));
-					temp.setQuantity(Integer.parseInt((String) CbxQuant.getSelectedItem()));
+//					Cart temp = customer.get(table.getSelectedRow()).getCart();
+//					temp.setItemname(txtfItemName.getText());
+//					temp.setSalesdate(datePicker.getJFormattedTextField().getText());
+////					temp.setSeller(txtfSalesPerson.getText());
+//					temp.setSeller(CbxSeller.getSelectedItem().toString());
+//					temp.setFee(Integer.parseInt(txtfFee.getText()));
+////					temp.setQuantity(Integer.parseInt(txtfQuant.getText()));
+//					temp.setQuantity(Integer.parseInt((String) CbxQuant.getSelectedItem()));
 
 					SalesDAOImpl.UpdateSQL(table);
 				} catch (Exception e2) {
@@ -427,7 +427,7 @@ public class SalesFrame extends JFrame {
 		                // Nếu tên tìm kiếm rỗng, thực hiện việc hiển thị lại danh sách khách hàng ban đầu
 		        		tableModel = SalesDAOImpl.ModelPrep();
 		        		table.setModel(tableModel);
-		        		scrollPane.setViewportView(table);
+//		        		scrollPane.setViewportView(table);
 		            } else {
 		                List<Customer> searchResults = salesDAO.search(searchName);
 

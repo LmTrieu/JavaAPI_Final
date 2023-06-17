@@ -11,7 +11,7 @@ public class CustomExceptionHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CustomExceptionHandler.class.getName());
 
     @ExceptionHandler(com.fasterxml.jackson.core.JsonParseException.class)
-    public ResponseEntity<Object> handleJsonParseException(com.fasterxml.jackson.core.JsonParseException ex) {
+    public ResponseEntity<String> handleJsonParseException(com.fasterxml.jackson.core.JsonParseException ex) {
         // Xử lý lỗi và thông báo tại đây
         LOGGER.error("Error parsing JSON: " + ex.getMessage());
 
