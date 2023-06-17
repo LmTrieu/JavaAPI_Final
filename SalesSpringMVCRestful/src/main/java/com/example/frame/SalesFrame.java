@@ -73,20 +73,18 @@ public class SalesFrame extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					frame = new SalesFrame();
-					frame.pack();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    SalesFrame frame = new SalesFrame();
+                    frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
 	public void setLoginFrame(LoginFrame loginFrame) {
         this.loginFrame = loginFrame;
@@ -120,9 +118,7 @@ public class SalesFrame extends JFrame {
 	 * @throws IOException
 	 */
 	public SalesFrame() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(SalesFrame.class.getResource("/images/logouef.png")));
 		setForeground(new Color(51, 255, 153));
-
 
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setTitle("SaleList");
@@ -338,8 +334,10 @@ public class SalesFrame extends JFrame {
 	            Cart temp = customer.get(row).getCart();
 	            String s=source.getValueAt(row, 0)+"";
 	            System.out.println(s);
-
+	            
 	            for (Customer i : customer) {
+	            	System.out.println(i.getName());
+	            	
 					if(i.getName().equals(s)) {
 						System.out.println(i.getName());
 			            temp = i.getCart();
@@ -448,7 +446,6 @@ public class SalesFrame extends JFrame {
 
 	}
 
-
 	private void openLoginModule() {
         this.setVisible(false);
         tableModel.setRowCount(0);
@@ -456,4 +453,5 @@ public class SalesFrame extends JFrame {
         LoginFrame loginFrame = new LoginFrame();
         loginFrame.setVisible(false);
     }
+	
 }

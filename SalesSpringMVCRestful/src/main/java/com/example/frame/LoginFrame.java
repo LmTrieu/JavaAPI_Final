@@ -255,6 +255,13 @@ public class LoginFrame extends JFrame implements ActionListener, KeyListener {
             if (statusCode == 200) {
                 // Xử lý đăng nhập thành công
                 JOptionPane.showMessageDialog(null, "Response: " + responseBody + " (" + statusCode + ")");
+				try {
+			        dispose();
+			        SalesFrame salesFrame = new SalesFrame();
+			        salesFrame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
             } else if (statusCode == 400) {
             	JOptionPane.showMessageDialog(null, "Response: " + responseBody + " (" + statusCode + ")");
             } else {

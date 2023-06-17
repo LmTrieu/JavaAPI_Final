@@ -74,8 +74,8 @@ public class Cart {
 	/**
 	 * @param seller the seller to set
 	 */
-	public void setSeller(String seller) {
-		Seller = seller;
+	public void setSeller(String Seller) {
+		this.Seller = Seller;
 	}
 
 	/**

@@ -8,19 +8,25 @@
            http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
     <!-- Database configuration -->
-    <!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <!-- <bean id="dataSource" classs="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
         <property name="url" value="jdbc:mysql://localhost:3306/shop_management" />
         <property name="username" value="root" />
         <property name="password" value="123456" />
     </bean> -->
-
+	<bean id="dbProperties"
+    class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+ 
+    <property name="location" value="classpath:application.properties" />
+ 
+	</bean>
+	
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
         <property name="url" value="${db.url}" />
         <property name="username" value="${db.username}" />
         <property name="password" value="${db.password}" />
-    </bean>
+    </bean>	
 
     <!-- Enable component scanning for controllers -->
     <context:component-scan base-package="com.example.controller" />

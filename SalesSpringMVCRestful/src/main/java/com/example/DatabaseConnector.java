@@ -5,14 +5,12 @@ import java.sql.*;
 import org.springframework.beans.factory.annotation.Value;
 
 public class DatabaseConnector {
-	@Value("${db.url}")
-    private static String URL;
-	@Value("${db.username}")
-    private static String USERNAME;
-	@Value("${db.password}")
-    private static String PASSWORD;
+	private static final String URL = "jdbc:mysql://localhost:3306/shop_management";
+    private static final String USERNAME = "root";
+    private static final String PASSWORD = "123456";
     
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
+    
 }

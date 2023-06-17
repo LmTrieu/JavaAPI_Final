@@ -1,6 +1,7 @@
 package com.example.dao;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,6 +18,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import org.springframework.beans.factory.annotation.Value;
+
+import com.example.DBService;
 import com.example.DatabaseActionException;
 import com.example.DatabaseConnector;
 import com.example.frame.SalesFrame;
@@ -26,6 +30,14 @@ import com.example.model.Customer;
 
 public class SalesDAOImpl implements SalesDAO {
 
+//	static DBService db = new DBService();
+//    private static String dbUrl = db.getDbUrl();
+//
+//    private static String dbUsername = db.getDbUsername();
+//
+//    private static String dbPassword = db.getDbPassword();
+	
+    
 	private static List<Customer> customerlist = new ArrayList<>();
 	static String col[] = {"Name","Telephone"};
 
@@ -100,7 +112,7 @@ public class SalesDAOImpl implements SalesDAO {
 
 	public static List<Customer> updateCartDAO() {
 		try(Connection connection = DatabaseConnector.getConnection()) {
-			PreparedStatement dm = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.cartid;");
+			PreparedStatement dm = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid;");
 			ResultSet rs = dm.executeQuery();
 			customerlist.clear();
 			while(rs.next()){
@@ -110,9 +122,9 @@ public class SalesDAOImpl implements SalesDAO {
 			}
 		return customerlist;
 		} catch (SQLException e) {
-			throw new DatabaseActionException(e);
+			throw new DatabaseActionException(e); 
 		}
-	}
+	}	
 	public static DefaultTableModel ModelPrep() {
 		SalesFrame.customer = SalesDAOImpl.updateCartDAO();
 		DefaultTableModel tableModel = new DefaultTableModel(col, 0);
