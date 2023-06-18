@@ -1,11 +1,16 @@
 package com.example.model;
 
-public class Customer {
+public class Customer implements Comparable {
 	
 	private int customerId;
 	private String name;
 	private int tel;
 	Cart cart = null;
+	
+	@Override
+    public int compareTo(Object obj) {
+        return this.name.compareTo(((Customer)obj).name);
+    }
 	
 	public Customer() {
 		super();
