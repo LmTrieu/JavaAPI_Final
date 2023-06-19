@@ -1,5 +1,8 @@
 package com.example.dao;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,7 +11,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.jdatepicker.JDateComponent; 
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonWriter;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -18,6 +29,18 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.example.DBService;
@@ -41,28 +64,35 @@ public class SalesDAOImpl implements SalesDAO {
 	private static List<Customer> customerlist = new ArrayList<>();
 	static String col[] = {"Name","Telephone"};
 
-	@Override
-	public List<Customer> search(String searchName) {
+	public static List<Customer> search(String searchName) throws ClientProtocolException, IOException {
+		
 	    List<Customer> searchResults = new ArrayList<>();
-	    boolean customerFound = false;
 
-	    for (Customer customer : customerlist) {
-	        if (customer.getName().toLowerCase().contains(searchName.toLowerCase())) {
-	            searchResults.add(customer);
-	            customerFound = true;
-	        }
-	    }
+	    HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet("http://localhost:8080/SalesSpringMVCRestful/sales/search?name="+searchName+"");
+		
+        HttpResponse response = httpClient.execute(request);
 
-	    if (!customerFound) {
+        HttpEntity responseEntity = response.getEntity();
+        String responseBody = EntityUtils.toString(responseEntity);
+        
+//        Customer customerMap = new Gson().fromJson(responseBody, Customer.class);
+        
+        Type type = new TypeToken<Map<String, Customer>>() {}.getType();
+        try {
+        	Map<Integer, Customer> customerMap = new Gson().fromJson(responseBody, type);
+        	searchResults = new ArrayList<>(customerMap.values());
+		} catch (Exception e) {
+			Customer customerMap = new Gson().fromJson(responseBody, Customer.class);
+			searchResults.add(customerMap);
+		}
+        
+	    if (searchResults.isEmpty()) {
 	        JOptionPane.showMessageDialog(null, "Customer not found.", "Search Result", JOptionPane.ERROR_MESSAGE);
 	    }
 
 	    return searchResults;
 	}
-
-
-	
-
 
 //	@Override
 //	public List<Customer> getAllCustomers() {
@@ -70,23 +100,35 @@ public class SalesDAOImpl implements SalesDAO {
 //	    return customerList;
 //	}
 
-	public static List<Customer> updateCartDAO() {
-		try(Connection connection = DatabaseConnector.getConnection()) {
-			PreparedStatement dm = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid;");
-			ResultSet rs = dm.executeQuery();
-			customerlist.clear();
-			while(rs.next()){
-				Cart cart = new Cart(rs.getString(5),rs.getString(6),rs.getDate(7).toString(),rs.getString(8),rs.getInt(9),rs.getInt(10));
-				Customer temp = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3),cart);
-				customerlist.add(temp);
-			}
+	public static List<Customer> updateCartDAO() throws ClientProtocolException, IOException {
+
+		customerlist.clear();
+		
+		HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet("http://localhost:8080/SalesSpringMVCRestful/sales");
+		
+        HttpResponse response = httpClient.execute(request);
+
+        HttpEntity responseEntity = response.getEntity();
+        String responseBody = EntityUtils.toString(responseEntity);
+        
+        Type type = new TypeToken<Map<String, Customer>>() {}.getType();
+        Map<String, Customer> customerMap = new Gson().fromJson(responseBody, type);
+
+        customerlist = new ArrayList<>(customerMap.values());
+
 		return customerlist;
-		} catch (SQLException e) {
-			throw new DatabaseActionException(e); 
-		}
 	}	
-	public static DefaultTableModel ModelPrep() {
-		SalesFrame.customer = SalesDAOImpl.updateCartDAO();
+	public static DefaultTableModel ModelPrep(JTable Table,AtomicBoolean isSorted) throws ClientProtocolException, IOException {
+		if(isSorted.get()) {
+			SalesFrame.customer = SalesDAOImpl.sortCustomerList(Table, isSorted);
+		}
+		else if(!isSorted.get()){
+			SalesFrame.customer = SalesDAOImpl.sortCustomerList(Table, isSorted);
+		}
+		else {
+			SalesFrame.customer = SalesDAOImpl.updateCartDAO();
+		}
 		DefaultTableModel tableModel = new DefaultTableModel(col, 0);
 		for (Customer temp : customerlist) {
 			Object[] t = {temp.getName(), temp.getTel()};
@@ -94,102 +136,107 @@ public class SalesDAOImpl implements SalesDAO {
 		}
 		return tableModel;
 	}
-	public static void UpdateSQL(JTable table) {
+	public static void UpdateSQL(JTable table) throws ClientProtocolException, IOException {
 	    int selectedRowIndex = table.getSelectedRow();
 	    Customer customer = SalesFrame.customer.get(selectedRowIndex);
+	    
+	    customer.setName((String)table.getValueAt(selectedRowIndex, 0));
+
+	    customer.setTel(Integer.valueOf(table.getValueAt(selectedRowIndex, 1).toString()));
+
 	    Cart cart = customer.getCart();
-
+	    int id = customer.getCustomerId();
+	    HttpClient httpClient = HttpClientBuilder.create().build();
+	    
 	    if (customer.getCustomerId() != 0) {
+	    	// Cập nhật khách hàng đã tồn tại
+	    	HttpPut putcust = new HttpPut("http://localhost:8080/SalesSpringMVCRestful/sales/"+id+"");
+		    String RequestPutCust = "{ \"name\": \""+customer.getName()+
+									"\", \"tel\": "+customer.getTel()+"}";
+		    
+		    StringEntity entitycust = new StringEntity(RequestPutCust,ContentType.create("application/json", "UTF-8"));
+		    putcust.setEntity(entitycust); 
+            
+            HttpResponse responsecust = httpClient.execute(putcust);
+            
 	        // Cập nhật đơn hàng đã tồn tại
-	        try (Connection connection = DatabaseConnector.getConnection()) {
-	            String query = "UPDATE `cart` SET itemname = ?, salesDate = ?, salesPerson = ?, fee = ?, quantity = ? WHERE customerId = ?";
-	            PreparedStatement statement = connection.prepareStatement(query);
-	            statement.setString(1, cart.getItemname());
-	            statement.setString(2, cart.getSalesdate());
-	            statement.setString(3, cart.getSeller());
-	            statement.setInt(4, cart.getFee());
-	            statement.setInt(5, cart.getQuantity());
-	            statement.setInt(6, customer.getCustomerId());
+            HttpPut putcart = new HttpPut("http://localhost:8080/SalesSpringMVCRestful/sales/cart/"+id+"");
 
-	            statement.executeUpdate();
-	        } catch (SQLException e) {
-	            throw new DatabaseActionException(e);
-	        }
+            // Create the JSON body
+            String requestBody = "{" +
+                    "    \"itemname\": \""+cart.getItemname()+"\"," +
+                    "    \"salesdate\": \""+cart.getSalesdate()+"\"," +
+                    "    \"fee\": "+cart.getFee()+"," +
+                    "    \"quantity\": "+cart.getQuantity()+"," +
+                    "    \"seller\": \""+cart.getSeller()+"\"" +
+                    "}";
+            StringEntity entitycart = new StringEntity(requestBody,ContentType.create("application/json", "UTF-8"));
+            putcart.setEntity(entitycart); 
+            
+            HttpResponse responsecart = httpClient.execute(putcart);
+
+            HttpEntity responseEntity = responsecart.getEntity();
 	    } else {
 	        // Thêm mới đơn hàng
-	        try (Connection connection = DatabaseConnector.getConnection()) {
-	        	String query = "INSERT INTO `customer` (name, tel) VALUES (?, ?)";
-	            PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-	            statement.setString(1, customer.getName());
-	            statement.setInt(2, customer.getTel());
+            HttpPost postcart = new HttpPost("http://localhost:8080/SalesSpringMVCRestful/sales");
 
-	            statement.executeUpdate();
-	            // Lấy customerId được sinh tự động
-	            ResultSet generatedKeys = statement.getGeneratedKeys();
-	            if (generatedKeys.next()) {
-	                int customerId = generatedKeys.getInt(1);
-	                customer.setCustomerId(customerId);
+            // Create the JSON body
+            String requestBody = "{ \"name\": \""+customer.getName()+
+            					"\", \"tel\": "+customer.getTel()+"}";
+            
+            StringEntity entity = new StringEntity(requestBody,ContentType.create("application/json", "UTF-8"));
+            postcart.setEntity(entity);
+            
+            HttpResponse response = httpClient.execute(postcart);
 
-	                // Thêm mới đơn hàng
-	                query = "INSERT INTO `cart` (customerId, itemname, salesDate, salesPerson, fee, quantity) VALUES (?, ?, ?, ?, ?, ?)";
-	                statement = connection.prepareStatement(query);
-	                statement.setInt(1, customerId);
-	                statement.setString(2, cart.getItemname());
-	                statement.setString(3, cart.getSalesdate());
-	                statement.setString(4, cart.getSeller());
-	                statement.setInt(5, cart.getFee());
-	                statement.setInt(6, cart.getQuantity());
-
-	                statement.executeUpdate();
-	            }
-	        } catch (SQLException e) {
-	            throw new DatabaseActionException(e);
-	        }
+            HttpEntity responseEntity = response.getEntity();
+            String responseBody = EntityUtils.toString(responseEntity);
 	    }
 	}
 	public static void DeleteRow(JTable table) {
 	    int i = table.getSelectedRow();
-	    Customer cs = SalesFrame.customer.get(i);
-	    Cart c = cs.getCart();
-	    int max = i;
-	    String getmax = "SELECT MAX( `customerid` ) FROM `cart` ;";
-        String query = "DELETE FROM `cart` WHERE (`customerid` = '"+c.getCustomerID()+"')";
-		String query2 = "DELETE FROM `customer` WHERE (`customerid` = '"+cs.getCustomerId()+"')";
-	    try (Connection connection = DatabaseConnector.getConnection()) {
-            Statement statement = connection.createStatement();
-            Statement get = connection.createStatement();
-            ResultSet rs = get.executeQuery(getmax);
-            if(rs.next()) {
-            	max = rs.getInt(1);
-                System.out.println(max);
-            }
+	    int id = SalesFrame.customer.get(i).getCustomerId();
+    	HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpDelete postcust = new HttpDelete("http://localhost:8080/SalesSpringMVCRestful/sales/"+id+"");
 
-            String resetcart = "ALTER TABLE `cart` AUTO_INCREMENT = "+(max-1)+";";
-    		String resetcust = "ALTER TABLE `customer` AUTO_INCREMENT = "+(max-1)+";";
-
-            statement.executeUpdate(query);
-            statement.executeUpdate(query2);
-			statement.executeUpdate(resetcart);
-			statement.executeUpdate(resetcust);
-        } catch (SQLException e) {
-            throw new DatabaseActionException(e);
-        }
+		try {
+			HttpResponse response = httpClient.execute(postcust);
+			HttpEntity responseEntity = response.getEntity();
+	        String responseBody = EntityUtils.toString(responseEntity);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}   
 	}
-
-
-
-
-
-	@Override
-	public void sortCustomerList(DefaultTableModel tableModel, AtomicBoolean isSorted) {
-		// TODO Auto-generated method stub
+	
+	public static List<Customer> sortCustomerList(JTable table, AtomicBoolean isSorted) {
+	    
+		int sort;
+		if(isSorted.get())
+			sort = 1;
+		else 
+			sort = 0;
 		
+		customerlist.clear();
+		
+		HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet("http://localhost:8080/SalesSpringMVCRestful/sales/sort/"+sort+"");
+        
+		try {
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity responseEntity = response.getEntity();
+	        String responseBody = EntityUtils.toString(responseEntity);
+	        Type type = new TypeToken<Map<String, Customer>>() {}.getType();
+	        Map<String, Customer> customerMap = new Gson().fromJson(responseBody, type);
+
+	        customerlist = new ArrayList<>(customerMap.values());
+	        
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+		}
+		return customerlist; 
 	}
-
-
-
-
-
+	
 	@Override
 	public List<Customer> getAllCustomers() {
 		// TODO Auto-generated method stub

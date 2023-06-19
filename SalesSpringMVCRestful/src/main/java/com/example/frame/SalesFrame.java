@@ -35,6 +35,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.http.client.ClientProtocolException;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
@@ -65,7 +66,8 @@ public class SalesFrame extends JFrame {
 	public JTextField txtfItemName;
 	public JTextField txtfFee;
 	public UtilDateModel model;
-
+	final AtomicBoolean isSorted = new AtomicBoolean(false);
+	
 	SalesDAO salesDAO;
 	Object[][] data;
 
@@ -97,7 +99,15 @@ public class SalesFrame extends JFrame {
 	public void setTable() {
 		table = new JTable();
 		table.setFont(new Font("Arial", Font.PLAIN, 15));
-		tableModel = SalesDAOImpl.ModelPrep();
+		try {
+			tableModel = SalesDAOImpl.ModelPrep(table, isSorted);
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		table.setModel(tableModel);
 	}
 
@@ -105,7 +115,7 @@ public class SalesFrame extends JFrame {
 		table = T;
 	}
 
-	public int[] date(int i) {
+	public int[] date(int i) throws NullPointerException {
 		String dateArr[] = customer.get(i).getCart().getSalesdate().split("-");
 		int day = Integer.parseInt(dateArr[0]) ;
 		int month = Integer.parseInt(dateArr[1]);
@@ -162,7 +172,7 @@ public class SalesFrame extends JFrame {
 		panel.add(btnNewCust);
 
 		// Tạo nút "Sort customer"
-		final AtomicBoolean isSorted = new AtomicBoolean(false); // Khởi tạo AtomicBoolean với giá trị ban đầu là false
+		
 		JButton btnSort = new JButton("Sort customer");
 		btnSort.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		panel.add(btnSort);
@@ -171,12 +181,21 @@ public class SalesFrame extends JFrame {
 		btnSort.addActionListener(new ActionListener() {
 		    @Override
 			public void actionPerformed(ActionEvent e) {
-		        // Sắp xếp danh sách tên
-		        DefaultTableModel tableModel = (DefaultTableModel) SalesFrame.getTable().getModel();
-		        salesDAO.sortCustomerList(tableModel, isSorted);
-
-		        // Đảo ngược trạng thái cờ
-		        isSorted.set(!isSorted.get()); // Thay đổi giá trị của AtomicBoolean
+		    	
+		    	isSorted.set(!isSorted.get());
+		        try {
+					tableModel = SalesDAOImpl.ModelPrep(table, isSorted);
+					
+					// Đảo ngược trạng thái cờ
+					
+					
+				} catch (ClientProtocolException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+		        
+				table.setModel(tableModel);
 		        table.setRowSelectionInterval(0, 0);
 		    }
 		});
@@ -327,7 +346,7 @@ public class SalesFrame extends JFrame {
 
 		table.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				JTable source = (JTable)e.getSource();
 	            int row = source.rowAtPoint(e.getPoint());
 	            System.out.println(row);
@@ -343,18 +362,20 @@ public class SalesFrame extends JFrame {
 			            temp = i.getCart();
 					}
 				}
-
-	        	int[]tdate = date(row);
 	        	try {
-//	        		CbxSeller.setSelectedItem(temp.getSeller());
-//		    		txtfItemName.setText(temp.getItemname());
-//		    		datePicker.getModel().setDate(tdate[0],tdate[1]-1,tdate[2]);
-//		    		datePicker.getModel().setSelected(true);
-//		    		txtfFee.setText(Integer.toString(temp.getFee()));
-////		    		txtfQuant.setText(Integer.toString(temp.getQuantity()));
-//		    		CbxQuant.setSelectedItem(Integer.toString(temp.getQuantity()));
-				} catch (Exception e2) {
-
+	        		int[]tdate = date(row);
+	        		CbxSeller.setSelectedItem(temp.getSeller());
+		    		txtfItemName.setText(temp.getItemname());
+		    		datePicker.getModel().setDate(tdate[0],tdate[1]-1,tdate[2]);
+		    		datePicker.getModel().setSelected(true);
+		    		txtfFee.setText(Integer.toString(temp.getFee()));
+		    		CbxQuant.setSelectedItem(Integer.toString(temp.getQuantity()));
+				} catch (Exception e2) { 
+					CbxSeller.setSelectedItem("");
+		    		txtfItemName.setText("");
+		    		datePicker.getModel().setSelected(true);
+		    		txtfFee.setText("0");
+		    		CbxQuant.setSelectedItem("");
 				}
 			}
 		});
@@ -364,14 +385,15 @@ public class SalesFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-//					Cart temp = customer.get(table.getSelectedRow()).getCart();
-//					temp.setItemname(txtfItemName.getText());
-//					temp.setSalesdate(datePicker.getJFormattedTextField().getText());
-////					temp.setSeller(txtfSalesPerson.getText());
-//					temp.setSeller(CbxSeller.getSelectedItem().toString());
-//					temp.setFee(Integer.parseInt(txtfFee.getText()));
-////					temp.setQuantity(Integer.parseInt(txtfQuant.getText()));
-//					temp.setQuantity(Integer.parseInt((String) CbxQuant.getSelectedItem()));
+					Cart temp = customer.get(table.getSelectedRow()).getCart();
+					temp.setItemname(txtfItemName.getText());
+					temp.setSalesdate(datePicker.getJFormattedTextField().getText());
+//					temp.setSeller(txtfSalesPerson.getText());
+					temp.setSeller(CbxSeller.getSelectedItem().toString());
+					temp.setFee(Integer.parseInt(txtfFee.getText()));
+//					temp.setQuantity(Integer.parseInt(txtfQuant.getText()));
+					temp.setQuantity(Integer.parseInt((String) CbxQuant.getSelectedItem()));
+					
 
 					SalesDAOImpl.UpdateSQL(table);
 				} catch (Exception e2) {
@@ -407,7 +429,15 @@ public class SalesFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				SalesDAOImpl.DeleteRow(table);
-				tableModel = SalesDAOImpl.ModelPrep();
+				try {
+					tableModel = SalesDAOImpl.ModelPrep(table, isSorted);
+				} catch (ClientProtocolException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				table.setModel(tableModel);
 			}
 		});
@@ -425,33 +455,45 @@ public class SalesFrame extends JFrame {
 		        if (searchName != null) {
 		            if (searchName.trim().isEmpty()) {
 		                // Nếu tên tìm kiếm rỗng, thực hiện việc hiển thị lại danh sách khách hàng ban đầu
-		        		tableModel = SalesDAOImpl.ModelPrep();
+		        		try {
+							tableModel = SalesDAOImpl.ModelPrep(table, isSorted);
+						} catch (ClientProtocolException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 		        		table.setModel(tableModel);
 //		        		scrollPane.setViewportView(table);
 		            } else {
-		                List<Customer> searchResults = salesDAO.search(searchName);
+						try {
+							List<Customer> searchResults = SalesDAOImpl.search(searchName);
+							DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+			                tableModel.setRowCount(0);
 
-		                DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-		                tableModel.setRowCount(0);
-
-		                for (Customer customer : searchResults) {
-		                    Object[] rowData = { customer.getName(), customer.getTel() };
-		                    tableModel.addRow(rowData);
-		                }
+			                for (Customer customer : searchResults) {
+			                    Object[] rowData = { customer.getName(), customer.getTel() };
+			                    tableModel.addRow(rowData);
+			                }
+						} catch (ClientProtocolException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 		            }
 		        }
 		    }
 		});
-
-
 	}
-
 	private void openLoginModule() {
         this.setVisible(false);
         tableModel.setRowCount(0);
         table.removeAll();
         LoginFrame loginFrame = new LoginFrame();
-        loginFrame.setVisible(false);
+        loginFrame.setVisible(true);
     }
 	
 }

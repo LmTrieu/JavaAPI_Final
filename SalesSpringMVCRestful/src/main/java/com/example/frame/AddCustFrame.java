@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.Date;
 
 import javax.swing.JButton;
@@ -16,6 +17,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.http.client.ClientProtocolException;
 
 import com.example.dao.*;
 import com.example.model.*;
@@ -93,7 +96,15 @@ public class AddCustFrame extends JFrame {
 						table.setRowSelectionInterval(i, i);
 						System.out.println(table.getSelectedRow());
 						SalesFrame.customer.add(new Customer(a,Integer.parseInt(b),new Cart(null, null, d.toString(), null, 0, 0)));
-						SalesDAOImpl.UpdateSQL(table);				    	
+						try {
+							SalesDAOImpl.UpdateSQL(table);
+						} catch (ClientProtocolException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}				    	
 					}
 				}
 			    dispose();

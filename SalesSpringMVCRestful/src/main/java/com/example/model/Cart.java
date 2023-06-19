@@ -17,7 +17,14 @@ public class Cart {
 		this.quantity = quantity;
 	}
 
+	public Cart( String itemname, String salesdate, String Seller, int fee, int quantity) {
 
+		this.itemname = itemname;
+		this.salesdate = salesdate;
+		this.Seller = Seller;
+		this.fee = fee;
+		this.quantity = quantity;
+	}
 	public Cart() {
 		super();
 	}
