@@ -54,25 +54,6 @@ public class SaleController {
     
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<Map<Integer,Object>> getCustomerList(){
-//		try (Connection connection = DriverManager.getConnection(dbUrl,dbUsername,dbPassword);
-//	             Statement statement = connection.createStatement();
-//	             ResultSet resultSet = statement.executeQuery("SELECT * FROM customer")) {
-//            Map<Integer, Object> customerlist = new HashMap<>();
-//            while (resultSet.next()) {
-//                int id = resultSet.getInt("customerid");
-//                Map<String, Object> customerMap = new HashMap<>();
-//                customerMap.put("customerid", id);
-//                customerMap.put("name", resultSet.getString("name"));
-//                customerMap.put("tel", resultSet.getInt("tel"));
-//                customerlist.put(id,customerMap);
-//            }
-//            return ResponseEntity.ok(customerlist);
-//            
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            System.out.println("help");
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
     	try (Connection connection = DriverManager.getConnection(dbUrl,dbUsername,dbPassword);
     			Statement statement = connection.createStatement();
     			Statement statement2 = connection.createStatement();
@@ -82,9 +63,9 @@ public class SaleController {
                		int id = rs.getInt("customerid");  
                		Cart cart = new Cart(); 
                		Customer cust = new Customer(id,rs.getString("name"),rs.getInt("tel"),cart);
-               		try(ResultSet rs2 = statement2.executeQuery("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid WHERE customer.customerid = "+id+"")){
+               		try(ResultSet rs2 = statement2.executeQuery("SELECT * FROM customer INNER JOIN cart "
+               				+ "on customer.customerid = cart.customerid WHERE customer.customerid = "+id+"")){
                			if(rs2.next()) {
-               				String a = rs2.getString(5);
                    			cart.setCustomerID(rs2.getString(5));  
                    			cart.setItemname(rs2.getString(6));
                    			cart.setSalesdate(rs2.getDate(7).toString());
@@ -93,12 +74,11 @@ public class SaleController {
                    			cart.setQuantity(rs2.getInt(10));
                    			cust.setCart(cart);
                			}
-//               			cart = new Cart(rs2.getString(5),rs2.getString(6),rs2.getDate(7).toString(),rs2.getString(8),rs2.getInt(9),rs2.getInt(10));
                		}
                		customerlist.put(id,cust); 
                	}
                	return ResponseEntity.ok(customerlist);
-    		}	
+    		}
        	 catch (SQLException e) {
        		 e.printStackTrace();
        		 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -107,37 +87,36 @@ public class SaleController {
 	
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Customer> getCart(@PathVariable("id") int customerid) {
-//    	try (Connection connection = DriverManager.getConnection(dbUrl,dbUsername,dbPassword);
-//             PreparedStatement statement = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid AND customer.customerid = ?")) {
-//            statement.setInt(1, customerid);
-//            try (ResultSet rs = statement.executeQuery()) {
-//                if (rs.next()) {
-//                    Cart cart = new Cart(rs.getString(5),rs.getString(6),rs.getDate(7).toString(),rs.getString(8),rs.getInt(9),rs.getInt(10));
-//    				Customer cust = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3),cart);
-//                    return ResponseEntity.ok(cust);
-//                } else {
-//                    return ResponseEntity.notFound().build(); 
-//                }
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
     	try (Connection connection = DriverManager.getConnection(dbUrl,dbUsername,dbPassword);
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM customer WHERE customerid = ?")) {
+    			PreparedStatement statement = connection.prepareStatement("SELECT * FROM customer WHERE customerid = ?");
+    			PreparedStatement statement2 = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart "
+    					+ "on customer.customerid = cart.customerid "
+    					+ "WHERE customer.customerid = ?");) {
                statement.setInt(1, customerid);
+               statement2.setInt(1, customerid);
+               Cart cart = new Cart();
                try (ResultSet rs = statement.executeQuery()) {
                    if (rs.next()) {
-                	   Customer cust = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3));
+                	   try(ResultSet rs2 = statement2.executeQuery()){
+                		   if(rs2.next()) { 
+                			   cart.setCustomerID(rs2.getString(5));  
+                			   cart.setItemname(rs2.getString(6)); 
+                			   cart.setSalesdate(rs2.getDate(7).toString());
+                			   cart.setSeller(rs2.getString(8));  
+                			   cart.setFee(rs2.getInt(9));
+                			   cart.setQuantity(rs2.getInt(10));  
+                		   }  
+                	   }
+                	   Customer cust = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3),cart);
                        return ResponseEntity.ok(cust);
                    } else {
                        return ResponseEntity.notFound().build(); 
                    }
                }
-           } catch (SQLException e) {
-               e.printStackTrace();
-               return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-           }
+       } catch (SQLException e) {
+           e.printStackTrace();
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+       }
     }
     
     @RequestMapping(value = "sort/{id}", method = RequestMethod.GET)
@@ -147,19 +126,12 @@ public class SaleController {
     			Statement statement2 = connection.createStatement();
 	             ResultSet resultSet = statement.executeQuery("SELECT * FROM customer")) {
            Map<Integer, Object> customerlist = new HashMap<>();
-//           while (resultSet.next()) {
-//               int id = resultSet.getInt("customerid");
-//               Map<String, Object> customerMap = new HashMap<>();
-//               customerMap.put("customerid", id);
-//               customerMap.put("name", resultSet.getString("name"));
-//               customerMap.put("tel", resultSet.getInt("tel"));
-//               customerlist.put(id,customerMap);
-//           }
            while (resultSet.next()) { 
           		int id = resultSet.getInt("customerid");  
           		Cart cart = new Cart();
           		Customer cust = new Customer(id,resultSet.getString("name"),resultSet.getInt("tel"),cart);
-          		try(ResultSet rs2 = statement2.executeQuery("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid WHERE customer.customerid = "+id+"")){
+          		try(ResultSet rs2 = statement2.executeQuery("SELECT * FROM customer INNER JOIN cart "
+          				+ "on customer.customerid = cart.customerid WHERE customer.customerid = "+id+"")){
           			if(rs2.next()) { 
               			cart.setCustomerID(rs2.getString(5));  
               			cart.setItemname(rs2.getString(6)); 
@@ -168,9 +140,7 @@ public class SaleController {
               			cart.setFee(rs2.getInt(9));
               			cart.setQuantity(rs2.getInt(10));
               			cust.setCart(cart);
-          			}
-//          			cart = new Cart(rs2.getString(5),rs2.getString(6),rs2.getDate(7).toString(),rs2.getString(8),rs2.getInt(9),rs2.getInt(10));
-          		}
+          			}          		}
           		customerlist.put(id,cust); 
           	}	
            if(sortKey == 1) {
@@ -187,35 +157,46 @@ public class SaleController {
            System.out.println("help");
            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
        }
-	}
+	} 
     
     @RequestMapping(value = "/search",params = {"name"}, method = RequestMethod.GET)
-    public ResponseEntity<Customer> getCustomer(@RequestParam("name") String customername) {
+    public ResponseEntity<Map<Integer, Object>> getCustomer(@RequestParam("name") String customername) {
     	try (Connection connection = DriverManager.getConnection(dbUrl,dbUsername,dbPassword);
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart on customer.customerid = cart.customerid AND customer.name = ?")) {
-            statement.setString(1, customername);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    Cart cart = new Cart(rs.getString(5),rs.getString(6),rs.getDate(7).toString(),rs.getString(8),rs.getInt(9),rs.getInt(10));
-    				Customer cust = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3),cart);
-                    return ResponseEntity.ok(cust);
-                }else{
-                	PreparedStatement statement2 = connection.prepareStatement("SELECT * FROM customer WHERE customer.name = ?");
-                	statement2.setString(1, customername);
-                	ResultSet rs2 = statement2.executeQuery();
-            		if (rs2.next()) {
-            			Customer cust2 = new Customer(rs2.getInt(1),rs2.getString(2),rs2.getInt(3),null);
-                		return ResponseEntity.ok(cust2);
-            		}
+             PreparedStatement statement2 = connection.prepareStatement("SELECT * FROM customer WHERE customer.name LIKE ?",
+            		 ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
+            statement2.setString(1, "%"+customername+"%"); 
+            Map<Integer, Object> customerlist = new HashMap<>(); 
+            try (ResultSet rs2 = statement2.executeQuery()) {
+            	if(!rs2.next()) { 
             		return ResponseEntity.notFound().build();
-                }
+            	}
+            	else {
+            		rs2.previous(); 
+            		while(rs2.next()) { 
+                    	PreparedStatement statement = connection.prepareStatement("SELECT * FROM customer INNER JOIN cart "
+                    			+ "ON customer.customerid = cart.customerid WHERE customer.name = ?");
+                    	statement.setString(1, rs2.getString(2));
+                    	ResultSet rs = statement.executeQuery(); 
+	            		if (rs.next()) { 
+	                        Cart cart = new Cart(rs.getString(5),rs.getString(6),rs.getDate(7).toString(),
+	                        						rs.getString(8),rs.getInt(9),rs.getInt(10));
+	        				Customer cust = new Customer(rs.getInt(1),rs.getString(2),rs.getInt(3),cart);
+	        				customerlist.put(rs.getInt("customerid"),cust);
+	                    }else{
+                			Customer cust2 = new Customer(rs2.getInt(1),rs2.getString(2),rs2.getInt(3),null);
+                			customerlist.put(rs2.getInt("customerid"),cust2);
+	                		
+	                    }
+	            	} 
+            	}	
+            	return ResponseEntity.ok(customerlist);
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+ 
     private static Map<Integer, Object> sortByComparator(Map<Integer, Object> unsortMap, final boolean order)
     {
         List<Entry<Integer, Object>> list = new LinkedList<Entry<Integer, Object>>(unsortMap.entrySet());
@@ -285,11 +266,11 @@ public class SaleController {
             statement.setInt(4, cartupt.getFee());
             statement.setInt(5, cartupt.getQuantity());
             statement.setInt(6, id);
-            
+             
             int rowsAffected = statement.executeUpdate(); 
             if (rowsAffected > 0) {
-                return ResponseEntity.ok("Cart added successfully.");
-            } else {
+                return ResponseEntity.ok("Cart updated successfully.");
+            } else { 
             	addCart(id, new Cart());
             	try {
                 	updateCart(id,cartupt); 

@@ -3,6 +3,7 @@ package com.example.dao;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -53,14 +54,6 @@ import com.example.model.Customer;
 
 public class SalesDAOImpl implements SalesDAO {
 
-//	static DBService db = new DBService();
-//    private static String dbUrl = db.getDbUrl();
-//
-//    private static String dbUsername = db.getDbUsername();
-//
-//    private static String dbPassword = db.getDbPassword();
-	
-    
 	private static List<Customer> customerlist = new ArrayList<>();
 	static String col[] = {"Name","Telephone"};
 
@@ -69,15 +62,14 @@ public class SalesDAOImpl implements SalesDAO {
 	    List<Customer> searchResults = new ArrayList<>();
 
 	    HttpClient httpClient = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet("http://localhost:8080/SalesSpringMVCRestful/sales/search?name="+searchName+"");
-		
-        HttpResponse response = httpClient.execute(request);
-
-        HttpEntity responseEntity = response.getEntity();
+	    
+	    String encodedName = URLEncoder.encode(searchName, "UTF-8");
+	    HttpGet request = new HttpGet("http://localhost:8080/SalesSpringMVCRestful/sales/search?name=" + encodedName);
+	    HttpResponse response = httpClient.execute(request);
+        
+        HttpEntity responseEntity = response.getEntity(); 
         String responseBody = EntityUtils.toString(responseEntity);
-        
-//        Customer customerMap = new Gson().fromJson(responseBody, Customer.class);
-        
+               
         Type type = new TypeToken<Map<String, Customer>>() {}.getType();
         try {
         	Map<Integer, Customer> customerMap = new Gson().fromJson(responseBody, type);
@@ -93,12 +85,6 @@ public class SalesDAOImpl implements SalesDAO {
 
 	    return searchResults;
 	}
-
-//	@Override
-//	public List<Customer> getAllCustomers() {
-//	    List<Customer> customerList = new ArrayList<>(customerlist);
-//	    return customerList;
-//	}
 
 	public static List<Customer> updateCartDAO() throws ClientProtocolException, IOException {
 
@@ -191,7 +177,9 @@ public class SalesDAOImpl implements SalesDAO {
 
             HttpEntity responseEntity = response.getEntity();
             String responseBody = EntityUtils.toString(responseEntity);
+                    
 	    }
+	    SalesFrame.tableModel = SalesDAOImpl.ModelPrep(table,SalesFrame.isSorted );
 	}
 	public static void DeleteRow(JTable table) {
 	    int i = table.getSelectedRow();
@@ -242,5 +230,4 @@ public class SalesDAOImpl implements SalesDAO {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }

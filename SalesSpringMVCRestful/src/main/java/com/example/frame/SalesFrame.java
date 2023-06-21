@@ -58,7 +58,7 @@ public class SalesFrame extends JFrame {
 	@SuppressWarnings("unused")
 	private LoginFrame loginFrame;
 	SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-	private DefaultTableModel tableModel = new DefaultTableModel();
+	public static DefaultTableModel tableModel = new DefaultTableModel();
 	public static List<Customer> customer = new ArrayList<>();
 	Calendar calendar = Calendar.getInstance();
 	public static JTable table;
@@ -66,8 +66,8 @@ public class SalesFrame extends JFrame {
 	public JTextField txtfItemName;
 	public JTextField txtfFee;
 	public UtilDateModel model;
-	final AtomicBoolean isSorted = new AtomicBoolean(false);
-	
+	public final static AtomicBoolean isSorted = new AtomicBoolean(false);
+	  
 	SalesDAO salesDAO;
 	Object[][] data;
 
@@ -158,7 +158,7 @@ public class SalesFrame extends JFrame {
 		btnSearch.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		panel.add(btnSearch);
 
-				JButton btnNewCust = new JButton("Add new customer");
+		JButton btnNewCust = new JButton("Add new customer");
 		btnNewCust.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
